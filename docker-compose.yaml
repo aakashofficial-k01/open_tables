@@ -1,0 +1,22 @@
+services:
+  pyspark:
+    build:
+      context: .
+      dockerfile: Dockerfile.pyspark
+    volumes:
+      - ./pyspark_data:/opt/spark/work-dir  # Persist PySpark work directory
+
+  # Jupyter notebooks for development
+  jupyter:
+    image: jupyter/pyspark-notebook:spark-3.5.0
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./warehouse:/warehouse
+    environment:
+      - SPARK_OPTS="--master=spark://spark-master:7077 --conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.4.3,org.apache.hudi:hudi-spark3.5-bundle_2.12:0.15.0"
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=""  # This removes token authentication
+      - JUPYTER_PASSWORD=""  # This removes password authentication
+    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
